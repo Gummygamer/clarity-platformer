@@ -1,0 +1,223 @@
+-- Clarity Platformer
+-- A simple 2D platformer with gravity, jumping, and platforms.
+
+record Player
+  x: decimal
+  y: decimal
+  vx: decimal
+  vy: decimal
+  w: integer
+  h: integer
+  on_ground: boolean
+end
+
+record Platform
+  x: integer
+  y: integer
+  w: integer
+  h: integer
+  r: integer
+  g: integer
+  b: integer
+end
+
+record GameState
+  player: Player
+  platforms: a list of Platform
+  running: boolean
+  camera_x: integer
+end
+
+function make_player(): Player
+  intent: create the initial player at the starting position
+  Player { x: 100.0, y: 300.0, vx: 0.0, vy: 0.0, w: 30, h: 40, on_ground: false }
+end
+
+function make_platforms(): a list of Platform
+  intent: create the level layout as a list of platforms
+  let green: integer = 180
+  [
+    Platform { x: 0, y: 550, w: 300, h: 50, r: 100, g: green, b: 50 },
+    Platform { x: 250, y: 480, w: 120, h: 20, r: 120, g: green, b: 60 },
+    Platform { x: 420, y: 420, w: 150, h: 20, r: 120, g: green, b: 60 },
+    Platform { x: 620, y: 360, w: 120, h: 20, r: 120, g: green, b: 60 },
+    Platform { x: 500, y: 550, w: 400, h: 50, r: 100, g: green, b: 50 },
+    Platform { x: 800, y: 300, w: 150, h: 20, r: 120, g: green, b: 60 },
+    Platform { x: 1000, y: 250, w: 120, h: 20, r: 120, g: green, b: 60 },
+    Platform { x: 1150, y: 550, w: 300, h: 50, r: 100, g: green, b: 50 },
+    Platform { x: 1200, y: 350, w: 150, h: 20, r: 120, g: green, b: 60 },
+    Platform { x: 1400, y: 280, w: 120, h: 20, r: 120, g: green, b: 60 },
+    Platform { x: 1550, y: 550, w: 400, h: 50, r: 100, g: green, b: 50 },
+    Platform { x: 1600, y: 400, w: 200, h: 20, r: 120, g: green, b: 60 },
+    Platform { x: 1850, y: 320, w: 150, h: 20, r: 120, g: green, b: 60 }
+  ]
+end
+
+function init_game(): GameState
+  intent: create the initial game state with player and platforms
+  GameState {
+    player: make_player(),
+    platforms: make_platforms(),
+    running: true,
+    camera_x: 0
+  }
+end
+
+function check_quit(events: a list of text, state: GameState): GameState
+  intent: check if quit event occurred and update running flag
+  let has_quit: boolean = contains(events, "quit")
+  let esc: boolean = sdl_is_key_pressed("Escape")
+  if has_quit or esc then
+    state with { running: false }
+  else
+    state
+  end
+end
+
+function apply_input(player: Player): Player
+  intent: apply keyboard input to player horizontal velocity and jumping
+  let move_speed: decimal = 5.0
+  mutable vx: decimal = 0.0
+  if sdl_is_key_pressed("Left") then
+    set vx = 0.0 - move_speed
+  end
+  if sdl_is_key_pressed("Right") then
+    set vx = move_speed
+  end
+  mutable new_vy: decimal = player.vy
+  if sdl_is_key_pressed("Space") and player.on_ground then
+    set new_vy = -12.0
+  end
+  player with { vx: vx, vy: new_vy }
+end
+
+function apply_gravity(player: Player): Player
+  intent: apply gravity to the player vertical velocity
+  let gravity: decimal = 0.6
+  let max_fall: decimal = 15.0
+  let new_vy: decimal = min(player.vy + gravity, max_fall)
+  player with { vy: new_vy }
+end
+
+function move_player(player: Player): Player
+  intent: update player position based on velocity
+  player with { x: player.x + player.vx, y: player.y + player.vy }
+end
+
+function rects_overlap(ax: decimal, ay: decimal, aw: integer, ah: integer, bx: integer, by: integer, bw: integer, bh: integer): boolean
+  intent: check if two axis-aligned rectangles overlap
+  let a_right: decimal = ax + to_decimal(aw)
+  let a_bottom: decimal = ay + to_decimal(ah)
+  let b_right: decimal = to_decimal(bx + bw)
+  let b_bottom: decimal = to_decimal(by + bh)
+  let bx_d: decimal = to_decimal(bx)
+  let by_d: decimal = to_decimal(by)
+  ax < b_right and a_right > bx_d and ay < b_bottom and a_bottom > by_d
+end
+
+function resolve_platform(player: Player, plat: Platform): Player
+  intent: resolve collision between player and a single platform
+  let px: decimal = player.x
+  let py: decimal = player.y
+  let pw: integer = player.w
+  let ph: integer = player.h
+  if not rects_overlap(px, py, pw, ph, plat.x, plat.y, plat.w, plat.h) then
+    return player
+  end
+  let prev_bottom: decimal = py - player.vy + to_decimal(ph)
+  let plat_top: decimal = to_decimal(plat.y)
+  if prev_bottom <= plat_top + 2.0 and player.vy >= 0.0 then
+    return player with { y: plat_top - to_decimal(ph), vy: 0.0, on_ground: true }
+  end
+  player
+end
+
+function resolve_collisions(player: Player, platforms: a list of Platform): Player
+  intent: resolve player collision against all platforms
+  mutable p: Player = player with { on_ground: false }
+  for plat in platforms do
+    set p = resolve_platform(p, plat)
+  end
+  p
+end
+
+function clamp_player(player: Player): Player
+  intent: prevent player from falling off the bottom of the world
+  if player.y > 650.0 then
+    return make_player()
+  end
+  player
+end
+
+function update_camera(player: Player, camera_x: integer): integer
+  intent: update camera to follow the player horizontally
+  let target: integer = floor(player.x) - 350
+  let diff: integer = target - camera_x
+  camera_x + diff / 8
+end
+
+function update_game(state: GameState): GameState
+  intent: run one frame of game logic
+  let p1: Player = apply_input(state.player)
+  let p2: Player = apply_gravity(p1)
+  let p3: Player = move_player(p2)
+  let p4: Player = resolve_collisions(p3, state.platforms)
+  let p5: Player = clamp_player(p4)
+  let cam: integer = update_camera(p5, state.camera_x)
+  state with { player: p5, camera_x: cam }
+end
+
+function draw_sky(): nothing
+  intent: draw the sky background
+  sdl_clear(135, 206, 235)
+end
+
+function draw_platform(plat: Platform, cam: integer): nothing
+  intent: draw a single platform offset by camera
+  let sx: integer = plat.x - cam
+  sdl_fill_rect(sx, plat.y, plat.w, plat.h, plat.r, plat.g, plat.b)
+end
+
+function draw_platforms(platforms: a list of Platform, cam: integer): nothing
+  intent: draw all platforms
+  for plat in platforms do
+    draw_platform(plat, cam)
+  end
+end
+
+function draw_player(player: Player, cam: integer): nothing
+  intent: draw the player rectangle
+  let sx: integer = floor(player.x) - cam
+  let sy: integer = floor(player.y)
+  sdl_fill_rect(sx, sy, player.w, player.h, 220, 50, 50)
+end
+
+function render(state: GameState): nothing
+  intent: render the entire game frame
+  draw_sky()
+  draw_platforms(state.platforms, state.camera_x)
+  draw_player(state.player, state.camera_x)
+  sdl_present()
+end
+
+function game_loop(state: GameState): nothing
+  intent: run the main game loop until quit
+  mutable s: GameState = state
+  while s.running do
+    let events: a list of text = sdl_poll_events()
+    set s = check_quit(events, s)
+    if s.running then
+      set s = update_game(s)
+      render(s)
+      sdl_delay(16)
+    end
+  end
+end
+
+function main(): nothing
+  intent: initialize SDL and run the platformer game
+  sdl_init("Clarity Platformer", 800, 600)
+  let state: GameState = init_game()
+  game_loop(state)
+  sdl_quit()
+end
