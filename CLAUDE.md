@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A simple 2D platformer game written in the **Clarity** programming language (`.cl` files), running on the Clarity interpreter located at `../clarity/`. The interpreter has been extended with SDL2 bindings to support window creation, rendering, input handling, and timing.
+A simple 2D platformer game written in the **Clarity** programming language (`.clar` files), running on the Clarity interpreter located at `../clarity/`. The interpreter has been extended with SDL2 bindings to support window creation, rendering, input handling, and timing.
 
 ## How to Build and Run
 
@@ -11,7 +11,7 @@ A simple 2D platformer game written in the **Clarity** programming language (`.c
 cd ../clarity && cargo build --release
 
 # Run the game
-../clarity/target/release/clarity-lang run game.cl
+../clarity/target/release/clarity-lang run game.clar
 ```
 
 ## Architecture
@@ -19,10 +19,10 @@ cd ../clarity && cargo build --release
 ```
 clarity-platformer/
 ├── CLAUDE.md           # This file
-└── game.cl             # Complete platformer game
+└── game.clar           # Complete platformer game
 ```
 
-The game is a single `.cl` file containing all records, game logic, physics, collision detection, and rendering.
+The game is a single `.clar` file containing all records, game logic, physics, collision detection, and rendering.
 
 ## Game Design
 
