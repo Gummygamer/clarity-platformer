@@ -1,28 +1,28 @@
-# CLAUDE.md — Clarity Platformer
+# CLAUDE.md — Legible Platformer
 
 ## Project Overview
 
-A simple 2D platformer game written in the **Clarity** programming language (`.clar` files), running on the Clarity interpreter located at `../clarity/`. The interpreter has been extended with SDL2 bindings to support window creation, rendering, input handling, and timing.
+A simple 2D platformer game written in the **Legible** programming language (`.lbl` files), running on the Legible interpreter located at `../legible/`. The interpreter has been extended with SDL2 bindings to support window creation, rendering, input handling, and timing.
 
 ## How to Build and Run
 
 ```bash
-# Build the interpreter (from the clarity directory)
-cd ../clarity && cargo build --release
+# Build the interpreter (from the legible directory)
+cd ../legible && cargo build --release
 
 # Run the game
-../clarity/target/release/clarity-lang run game.clar
+../legible/target/release/legible run game.lbl
 ```
 
 ## Architecture
 
 ```
-clarity-platformer/
+legible-platformer/
 ├── CLAUDE.md           # This file
-└── game.clar           # Complete platformer game
+└── game.lbl            # Complete platformer game
 ```
 
-The game is a single `.clar` file containing all records, game logic, physics, collision detection, and rendering.
+The game is a single `.lbl` file containing all records, game logic, physics, collision detection, and rendering.
 
 ## Game Design
 
@@ -47,7 +47,7 @@ Standard fixed-timestep loop:
 
 ## SDL2 Builtins Available
 
-These functions are built into the Clarity interpreter (`../clarity/src/interpreter/sdl_builtins.rs`):
+These functions are built into the Legible interpreter (`../legible/src/interpreter/sdl_builtins.rs`):
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
@@ -69,7 +69,7 @@ Use SDL scancode names: `"Left"`, `"Right"`, `"Up"`, `"Down"`, `"Space"`, `"Esca
 - `"key_down:KeyName"` — key pressed
 - `"key_up:KeyName"` — key released
 
-## Clarity Language Constraints
+## Legible Language Constraints
 
 - Max 40 lines per function body — split logic into small focused functions
 - Every function needs an `intent:` line

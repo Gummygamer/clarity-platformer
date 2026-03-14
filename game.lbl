@@ -1,4 +1,4 @@
--- Clarity Platformer
+-- Legible Platformer
 -- A simple 2D platformer with gravity, jumping, and platforms.
 
 record Player
@@ -216,7 +216,7 @@ end
 
 function main(): nothing
   intent: initialize SDL and run the platformer game
-  sdl_init("Clarity Platformer", 800, 600)
+  sdl_init("Legible Platformer", 800, 600)
   let state: GameState = init_game()
   game_loop(state)
   sdl_quit()
